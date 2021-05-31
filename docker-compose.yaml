@@ -1,0 +1,42 @@
+version: '3.9'
+
+services:
+    node:
+        build: 
+            context: ./node
+            dockerfile: Dockerfile
+        container_name: node
+        entrypoint: dockerize -wait tcp://db:3306 -timeout 30s docker-entrypoint.sh
+        networks: 
+            - code_education
+        tty: true
+        depends_on: 
+            - db
+
+    nginx:
+        build: 
+            context: ./nginx
+            dockerfile: Dockerfile
+        container_name: nginx
+        networks: 
+            - code_education
+        ports: 
+            - 8080:80
+
+    db:
+        image: mysql:latest
+        command: 
+            - --innodb-use-native-aio=0
+            - --default-authentication-plugin=mysql_native_password
+        container_name: db
+        restart: always
+        tty: true
+        environment: 
+            - MYSQL_DATABASE=nodedb
+            - MYSQL_ROOT_PASSWORD=root
+        networks: 
+            - code_education
+        
+networks: 
+    code_education:
+        driver: bridge
